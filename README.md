@@ -65,3 +65,4 @@ You might need these plugins to utilize my plugin resources totally.
 
 Jetbrains supports TaiXiu with their [Open Source Licenses](https://www.jetbrains.com/opensource/).
 "# taixiuv2" 
+"# taixiuv2" 
