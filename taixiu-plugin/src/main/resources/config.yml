@@ -152,3 +152,8 @@ toggle-settings:
 # Không tốn tài nguyên máy chủ, cảm ơn bản đã sử dụng plugin.
 bStats:
   enabled: true
+# Configuration for tax recipients
+tax-recipients:
+  - name: "Player1"
+  - name: "Player2"
+  # Add more tax recipients as needed

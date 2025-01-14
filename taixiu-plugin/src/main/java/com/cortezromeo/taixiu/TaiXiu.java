@@ -1,5 +1,16 @@
 package com.cortezromeo.taixiu;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import org.black_ixx.playerpoints.PlayerPoints;
+import org.black_ixx.playerpoints.PlayerPointsAPI;
+import org.bukkit.Bukkit;
+import org.bukkit.boss.BossBar;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+
 import com.cortezromeo.taixiu.api.server.VersionSupport;
 import com.cortezromeo.taixiu.command.TaiXiuAdminCommand;
 import com.cortezromeo.taixiu.command.TaiXiuCommand;
@@ -14,25 +25,20 @@ import com.cortezromeo.taixiu.language.Vietnamese;
 import com.cortezromeo.taixiu.listener.InventoryClickListener;
 import com.cortezromeo.taixiu.listener.PlayerJoinListener;
 import com.cortezromeo.taixiu.listener.PlayerQuitListener;
-import com.cortezromeo.taixiu.manager.*;
+import com.cortezromeo.taixiu.manager.AutoSaveManager;
+import com.cortezromeo.taixiu.manager.BossBarManager;
+import com.cortezromeo.taixiu.manager.DatabaseManager;
+import static com.cortezromeo.taixiu.manager.DebugManager.setDebug;
+import com.cortezromeo.taixiu.manager.DiscordManager;
+import com.cortezromeo.taixiu.manager.TaiXiuManager;
 import com.cortezromeo.taixiu.storage.SessionDataStorage;
 import com.cortezromeo.taixiu.support.PAPISupport;
 import com.cortezromeo.taixiu.support.VaultSupport;
 import com.cortezromeo.taixiu.support.version.cross.CrossVersionSupport;
-import com.tchristofferson.configupdater.ConfigUpdater;
-import net.milkbowl.vault.economy.Economy;
-import org.black_ixx.playerpoints.PlayerPoints;
-import org.black_ixx.playerpoints.PlayerPointsAPI;
-import org.bukkit.Bukkit;
-import org.bukkit.boss.BossBar;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
-
-import java.io.File;
-import java.io.IOException;
-
-import static com.cortezromeo.taixiu.manager.DebugManager.setDebug;
 import static com.cortezromeo.taixiu.util.MessageUtil.log;
+import com.tchristofferson.configupdater.ConfigUpdater;
+
+import net.milkbowl.vault.economy.Economy;
 
 public final class TaiXiu extends JavaPlugin {
 
@@ -234,6 +240,31 @@ public final class TaiXiu extends JavaPlugin {
 
     public static PlayerPointsAPI getPlayerPointsAPI() {
         return playerPointsAPI;
+    }
+    private void distributeTax(double totalTax) {
+    List<String> taxRecipients = getConfig().getStringList("tax-recipients");
+    if (taxRecipients.isEmpty()) return;
+
+    double individualTax = totalTax / taxRecipients.size();
+
+    for (String recipientName : taxRecipients) {
+        Player recipient = Bukkit.getPlayer(recipientName);
+        if (recipient != null && recipient.isOnline()) {
+            econ.depositPlayer(recipient, individualTax);
+            }
+        }
+    }
+    // Assume this method is where winnings are handled
+    private void handleWinnings(Player winner, double winnings) {
+        double taxRate = getConfig().getDouble("bet-settings.tax") / 100;
+        double tax = winnings * taxRate;
+        double finalWinnings = winnings - tax;
+
+        // Pay the winner
+        econ.depositPlayer(winner, finalWinnings);
+
+        // Distribute the tax
+        distributeTax(tax);
     }
 
     @Override
