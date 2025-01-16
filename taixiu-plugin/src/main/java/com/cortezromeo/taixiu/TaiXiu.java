@@ -55,6 +55,7 @@ public final class TaiXiu extends JavaPlugin {
         plugin = this;
         nms = new CrossVersionSupport(plugin);
     }
+
     @Override
     public void onEnable() {
         initFile();
@@ -241,30 +242,37 @@ public final class TaiXiu extends JavaPlugin {
     public static PlayerPointsAPI getPlayerPointsAPI() {
         return playerPointsAPI;
     }
+
     private void distributeTax(double totalTax) {
-    List<String> taxRecipients = getConfig().getStringList("tax-recipients");
-    if (taxRecipients.isEmpty()) return;
+        List<String> taxRecipients = getConfig().getStringList("tax-recipients");
+        if (taxRecipients.isEmpty()) return;
 
-    double individualTax = totalTax / taxRecipients.size();
+        double individualTax = totalTax / taxRecipients.size();
 
-    for (String recipientName : taxRecipients) {
-        Player recipient = Bukkit.getPlayer(recipientName);
-        if (recipient != null && recipient.isOnline()) {
-            econ.depositPlayer(recipient, individualTax);
+        for (String recipientName : taxRecipients) {
+            Player recipient = Bukkit.getPlayer(recipientName);
+            if (recipient != null && recipient.isOnline()) {
+                econ.depositPlayer(recipient, individualTax);
+                log("&aĐã chuyển " + individualTax + " tiền thuế cho " + recipientName);
+            } else {
+                log("&eNgười nhận " + recipientName + " không trực tuyến. Thuế chưa được trả.");
             }
         }
     }
-    // Assume this method is where winnings are handled
+
     private void handleWinnings(Player winner, double winnings) {
         double taxRate = getConfig().getDouble("bet-settings.tax") / 100;
         double tax = winnings * taxRate;
         double finalWinnings = winnings - tax;
 
-        // Pay the winner
         econ.depositPlayer(winner, finalWinnings);
+        log("&aNgười chơi " + winner.getName() + " đã nhận được " + finalWinnings + " sau khi trừ thuế.");
 
-        // Distribute the tax
-        distributeTax(tax);
+        if (tax > 0) {
+            distributeTax(tax);
+        } else {
+            log("&eKhông có thuế để phân phối.");
+        }
     }
 
     @Override
